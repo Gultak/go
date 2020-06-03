@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+
+<head>
+  <style>
+    body {
+      font-family: Calibri;
+    }
+
+    form {
+      position: relative;
+    }
+
+    .header {
+      padding: 10px;
+      font-weight: bold;
+      font-size: 150%;
+    }
+
+    .messages {
+      padding: 10px;
+      border: 1px solid black;
+    }
+
+    .edit {
+      padding: 10px;
+
+    }
+
+    #sender,
+    #receiver {
+      display: none;
+    }
+
+    #shutdown {
+      position: absolute;
+      right: 0;
+    }
+
+  </style>
+  <script>
+    function handleSubmit(event) {
+      var form = event.srcElement;
+      var user = form['user'].value;
+      var message = form['message'].value;
+      var sender = document.getElementById('sender');
+      sender.src = '/add/' + encodeURIComponent(user) + '/' + encodeURIComponent(message);
+      form['message'].value = '';
+      return false;
+    }
+
+    function handleSend(event) {
+      var result = document.getElementById('result');
+      var sender = document.getElementById('sender');
+      var message = sender.contentWindow.document.getElementsByTagName('pre');
+      result.innerText = message && message[0] && message[0].innerText || '';
+    }
+
+    function handleReceive(event) {
+      var message = '';
+      try {
+        var receiver = document.getElementById('receiver');
+        var messages = receiver.contentWindow.document.getElementsByTagName('body');
+        message = messages[0].innerHTML;
+      } catch (e) {
+        console.log(e);
+        message = '--- Server unavailable ---';
+      }
+      document.getElementById('messages').innerHTML = message;
+    }
+
+    function handleShutdown() {
+      var sender = document.getElementById('sender');
+      sender.src = '/shutdown';
+      return false;
+    }
+
+    function handleLoad() {
+      setInterval(handlePull, 1000);
+    }
+
+    function handlePull() {
+      var receiver = document.getElementById('receiver');
+      receiver.contentWindow.location.reload(true);
+    }
+
+  </script>
+
+</head>
+
+<body onload="handleLoad()">
+  <div class="header">Chat Messages:</div>
+  <div class="messages" id="messages">...</div>
+  <div class="edit">
+    <form onsubmit="return handleSubmit(event)">
+      <input type="text" name="user" />
+      <input type="text" name="message" />
+      <button type="submit">Send</button>
+      <span id="result"></span>
+      <button id="shutdown" onclick="return handleShutdown()">Shutdown</button>
+    </form>
+  </div>
+  <iframe id="sender" onload="handleSend(event)"></iframe>
+  <iframe id="receiver" onload="handleReceive(event)" src="/poll"></iframe>
+</body>
+
+</html>

@@ -20,6 +20,8 @@ var srv *http.Server
 
 var messages []chatMessage
 
+var lock sync.Mutex
+
 func pollHandler(w http.ResponseWriter, r *http.Request) {
 	if len(messages) == 0 {
 		fmt.Fprintln(w, "----- no Messages yet ---")
@@ -57,6 +59,8 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		} else if msg := parts[len(parts)-1]; msg == "" {
 			fmt.Fprintln(w, "empty message!")
 		} else {
+			lock.Lock()
+			defer lock.Unlock()
 			messages = append(messages, chatMessage{user, msg})
 			fmt.Fprintln(w, "message received.")
 		}
